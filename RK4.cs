@@ -2,8 +2,8 @@ class RK4_Stepper
 {
     private double time_step = 0;
     private double current_time = 0;
-    private double current_position = 0;
-    private double current_velocity = 0; 
+    public double current_position = 0;
+    public double current_velocity = 0; 
 
     public RK4_Stepper()
     {
