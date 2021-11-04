@@ -9,8 +9,8 @@ def generate_chromosome():
     random.randrange(0,200),random.randrange(0,200), 
     random.randrange(100,200),random.randrange(100,200)]
     #this loop makes sure that the tip chord of a fin combination does
-    # does not extend over the back of the root chord for aesthetic reasons 
-    while (chromosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300:
+    #not extend over the back of the root chord for aesthetic reasons 
+    while (chrmosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300:
         chromosome=[random.randrange(0,200),random.randrange(0,200),
         random.randrange(0,200),random.randrange(0,200), 
         random.randrange(100,200),random.randrange(100,200)]
