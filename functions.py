@@ -138,19 +138,21 @@ def choose_parents(all_parents, all_costs):
    worst=max(all_costs)
    all_costs[np.argmin(all_costs)]+=1
    likelihood=1/(all_costs/worst)
-   return likelihood
+   chosen_ones=random.choices(all_parents,likelihood,len(all_parents))
+
+   return chosen_ones
 
 
     
 
-def crossover(sorted_combos, index_to_consider, percent_to_consider):
+def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
 
 
     amount=(int(percent_to_consider*len(sorted_combos))-index_to_consider)
     if amount-index_to_consider % 2 !=0:
         amount-=1
     prelim_parents=sorted_combos[index_to_consider:amount]
-    parents=choose_parents(prelim_parents, )
+    parents=choose_parents(prelim_parents,all_costs)
 
 
     children=[None]*len(sorted_combos)
