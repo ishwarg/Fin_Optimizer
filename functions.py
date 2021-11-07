@@ -1,6 +1,7 @@
 import random
-import numpy
+import numpy as np
 import orhelper
+generation_size=1000
 
 def generate_chromosome():
     random.seed(version=2)
@@ -115,20 +116,35 @@ def calculate_cost(pred_h):
     return (30,500 - pred_h)**2
 
 
+def choose_parents(all_parents, all_costs):
+
+   worst=max(all_costs)
+   all_costs[np.argmin(all_costs)]+=1
+   likelihood=1/(all_costs/worst)
+   return likelihood
+
+
+    
+
 def crossover(sorted_combos, index_to_consider, percent_to_consider):
+
+
     amount=(int(percent_to_consider*len(sorted_combos))-index_to_consider)
     if amount-index_to_consider % 2 !=0:
         amount-=1
-    parents=sorted_combos[index_to_consider:amount]
-    children=[None]*len(parents)
+    prelim_parents=sorted_combos[index_to_consider:amount]
+    parents=choose_parents(prelim_parents, )
+
+
+    children=[None]*len(sorted_combos)
 
     count=0
     while count<len(parents):
         beta=random.random()
         crossover_point=random.range(0,6)
 
-        child1=convert_string_to_array(parents[count])
-        child2=convert_string_to_array(parents[count+1])
+        child1=convert_string_to_array(parents[random.randrage(index_to_consider,amount)])
+        child2=convert_string_to_array(parents[random.randrage(index_to_consider,amount)])
 
         child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
         child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
@@ -137,7 +153,11 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider):
         children[count+1]=convert_to_continuous_string(child2)
         
         count+=2
+    
+    while count<len(children):
         
+        count+=2
+
     return children
 
 
