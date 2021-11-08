@@ -4,7 +4,7 @@ import orhelper
 generation_size=1000
 
 def generate_chromosome():
-    random.seed(version=2)
+    
     #first two entries are the tip chords of both stages, then sweep lengths 
     # of both stages and then the fin heights for both stages
     chromosome=[random.randrange(0,200),random.randrange(0,200),
