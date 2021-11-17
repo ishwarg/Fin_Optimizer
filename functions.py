@@ -5,6 +5,7 @@ import orhelper
 from orhelper import FlightDataType
 generation_size=1000
 
+
 def generate_chromosome():
     
     #first two entries are the tip chords of both stages (first stage then second stage),
@@ -180,32 +181,62 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
 
     return children
 
-def simulatefincombo(fincombo):
+def mutate(children):
+        mutationExtent = np.array([0.25, 0.5, 0.3, 0.4, 0.1, 0])
+        mutationProbability = 0.1
+        i = 0
+        while(i < len(children)):
+                tempArray = convert_string_to_array(children[i])
+                x = 0
+                while( x < len(tempArray)):
+                        prob = random.randint(0,99)
+                        probIndex = random.randint(0,5)
+                        if prob < mutationProbability * 100:
+                                tempArray[x] = int(tempArray[x] + mutationExtent[probIndex] * tempArray[x])
+                                x += 1
+                children[i] = convert_to_continuous_string(tempArray)
+                i+=1
+        return children
+
+def simulatefincombo(fincombo,stability1,stability2):
 
     with orhelper.OpenRocketInstance() as instance:
-            orh = orhelper.Helper(instance)
-            doc = orh.load_doc(os.path.join('examples', 'Tantalus.ork'))
-            sim = doc.getSimulation(0)
-            opts = sim.getOptions()
-            rocket = opts.getRocket()
+        orh = orhelper.Helper(instance)
+        doc = orh.load_doc(os.path.join('examples', 'Tantalus.ork'))
+        sim = doc.getSimulation(0)
+        opts = sim.getOptions()
+        rocket = opts.getRocket()
 
-            fins=convert_string_to_array(fincombo)
-            firststagefins=orh.get_component_named(rocket, "First Stage Fins")
-            secondstagefins=orh.get_component_named(rocket, "Second Stage Fins")
-            firststagefins.setTipChord(float(fins[0])/1000)
-            firststagefins.setSweep(float(fins[2])/1000)
-            firststagefins.setHeight(float(fins[4])/1000)
-            secondstagefins.setTipChord(float(fins[1])/1000)
-            secondstagefins.setSweep(float(fins[3])/1000)
-            secondstagefins.setHeight(float(fins[5])/1000)
-            
-            
-            orh.run_simulation(sim)
-            data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY])
-            events = orh.get_events(sim)
-            eventsvaluesdic=list(events.values())
-            times=list(data[FlightDataType.TYPE_TIME])
-            altitude=list(data[FlightDataType.TYPE_ALTITUDE])
+        fins=convert_string_to_array(fincombo)
+        firststagefins=orh.get_component_named(rocket, "First Stage Fins")
+        secondstagefins=orh.get_component_named(rocket, "Second Stage Fins")
+        firststagefins.setTipChord(float(fins[0])/1000)
+        firststagefins.setSweep(float(fins[2])/1000)
+        firststagefins.setHeight(float(fins[4])/1000)
+        secondstagefins.setTipChord(float(fins[1])/1000)
+        secondstagefins.setSweep(float(fins[3])/1000)
+        secondstagefins.setHeight(float(fins[5])/1000)
+        
+        
+        orh.run_simulation(sim)
+        data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
+        events = orh.get_events(sim)
+        eventsvaluesdic=list(events.values())
+        times=list(data[FlightDataType.TYPE_TIME])
+        altitude=list(data[FlightDataType.TYPE_ALTITUDE])
+
+        stabilityoffrod=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[3])]
+        stabilityatseperation=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[6])]
+
+        #include that checks for flutter here if possible and add a true false into outputlist
+
+        outputlist=[max(altitude),stabilityoffrod<stability1,stabilityatseperation<stability2,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
+
+        return outputlist
+
+
+           
+
 
     
 
