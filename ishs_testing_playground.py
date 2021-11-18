@@ -7,8 +7,9 @@ import orhelper
 import functions as fs
 from orhelper import FlightDataType 
 
+#this depenedency will be flipped when the final GA file is made
 
-generation_size=100
+generation_size=fs.generation_size
 
 #stopping condition (for now will be a simple max number of generations)
 num_generations=10
@@ -18,19 +19,18 @@ launchrod=1.5
 seperation=2
 
 generation=fs.create_generation(generation_size)
-altitudes=[None]*generation_size
+altitudes=[]
 
 #stores indexes of rejected combos 
-rejectedcombos=[None]*generation_size
-
+rejectedcombos=[]
 
 
 
 def sort_combined_arrays(array1,array2):
         count=0
-        newarray=[None]
+        newarray=[]
         while count<len(array1):
-                newarray[count]=(array1[count],array2[count])
+                newarray.append((array1[count],array2[count]))
                 count+=1
         newarray.sort(key= lambda array: array[1])
 
@@ -76,9 +76,9 @@ with orhelper.OpenRocketInstance() as instance:
                 outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
 
                 if outputs[1] or outputs[2]:
-                        rejectedcombos[rejectcount]=count
+                        rejectedcombos.append(count)
                         rejectcount+=1
-                altitudes[count]=outputs[0]
+                altitudes.append(outputs[0])
                 count+=1
         
         amountrejected=len(rejectedcombos)
@@ -94,12 +94,12 @@ with orhelper.OpenRocketInstance() as instance:
         costsandcombos= sort_combined_arrays(costs,generation)
 
         count=0
-        costs=[None]*generation_size
-        combos=[None]*generation_size
+        costs=[]
+        combos=[]
         for x in costsandcombos:
-                combos[count]=x[1]
+                combos.append(x[1])
         for x in costsandcombos:
-                costs[count]=x[0]
+                costs.append(x[0])
         children=fs.crossover(combos,10, 0.7,costs)
 
         #need to add statement that appends children so that it becomes an array of length generation_size
@@ -132,9 +132,9 @@ while generationcount<num_generations:
                 outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
 
                 if outputs[1] or outputs[2]:
-                        rejectedcombos[rejectcount]=count
+                        rejectedcombos.append(count)
                         rejectcount+=1
-                altitudes[count]=outputs[0]
+                altitudes.append(outputs[0])
                 count+=1
         
         amountrejected=len(rejectedcombos)
@@ -150,18 +150,17 @@ while generationcount<num_generations:
         costsandcombos= sort_combined_arrays(costs,children)
 
         count=0
-        costs=[None]
-        combos=[None]
+        costs=[]
+        combos=[]
         for x in costsandcombos:
-                combos[count]=x[1]
+                combos.append(x[1])
         for x in costsandcombos:
-                costs[count]=x[0]
+                costs.append(x[0])
         children=fs.crossover(combos,10, 0.7,costs)
         #need to add statement that appends children so that it becomes an array of length generation_size
         generationcount+=1
 
-print(children[:9])   
-
+print(children[:10])   
 
      
 

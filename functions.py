@@ -3,7 +3,7 @@ import random
 import numpy as np
 import orhelper
 from orhelper import FlightDataType
-generation_size=1000
+generation_size=20
 
 
 def generate_chromosome():
@@ -133,15 +133,16 @@ def calculate_height(valid_combos_full):
     return pred_h
 
 def calculate_cost(pred_h):
-    return (30,500 - pred_h)**2
+    costs=[(x*-1 + 30500) for x in pred_h]
+    return np.square(costs)
 
 
 def choose_parents(all_parents, all_costs):
 
    worst=max(all_costs)
    all_costs[np.argmin(all_costs)]+=1
-   likelihood=1/(all_costs/worst)
-   chosen_ones=random.choices(all_parents,likelihood,len(all_parents))
+   likelihood=[worst/x for x in all_costs]
+   chosen_ones=random.choices(all_parents,weights=likelihood,k=len(all_parents))
 
    return chosen_ones
 
@@ -178,7 +179,9 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
     
         
         #rafi needs to add functions that "refill" the remaining spots in the children array
-
+    while count<generation_size:
+        children.append(generate_chromosome())
+        count+=1
     return children
 
 def mutate(children):
