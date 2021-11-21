@@ -196,21 +196,23 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
     return children
 
 def mutate(children):
-        mutationExtent = np.array([0.25, 0.5, 0.3, 0.4, 0.1, 0])
-        mutationProbability = 0.1
-        i = 0
-        while(i < len(children)):
-                tempArray = convert_string_to_array(children[i])
-                x = 0
-                while( x < len(tempArray)):
-                        prob = random.randint(0,99)
-                        probIndex = random.randint(0,5)
-                        if prob < mutationProbability * 100:
-                                tempArray[x] = int(tempArray[x] + mutationExtent[probIndex] * tempArray[x])
-                                x += 1
-                children[i] = convert_to_continuous_string(tempArray)
-                i+=1
-        return children
+    temp = children.copy()
+    for s in temp:
+        s = convert_string_to_array(s)
+    print(temp)
+    prob_mutation = np.array([.25, 1, .3, .6, .9, 0])
+    max_mutation = np.array([10, 5, 7, 10, 15, 3])
+    for i in temp:
+        will_mutate = (prob_mutation > np.random.uniform(0, 1))
+        c = 0
+        while c < len(i):
+            if (will_mutate[c] == True):
+                i[c] = i[c] + max_mutation[c]*np.random.uniform(-1, 1)
+            c+=1
+    temp.astype(int)
+    for s in temp:
+        s = convert_to_continuous_string(s)
+    return temp
 
 def simulatefincombo(fincombo,stability1,stability2):
 
