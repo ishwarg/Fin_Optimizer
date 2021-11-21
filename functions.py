@@ -139,13 +139,19 @@ def calculate_cost(pred_h):
 
 def choose_parents(all_parents, all_costs):
 
-   worst=max(all_costs)
-   all_costs[np.argmin(all_costs)]+=1
-   likelihood=[worst/x for x in all_costs]
-   chosen_ones=random.choices(all_parents,weights=likelihood,k=len(all_parents))
+   if len(all_costs):
+    worst=max(all_costs)
+    indexofmin=np.argmin(all_costs)
+    all_costs[indexofmin]+=1
+    likelihood=[worst/x for x in all_costs]
+    chosen_ones=random.choices(all_parents,weights=likelihood,k=len(all_parents))
 
-   return chosen_ones
+    return chosen_ones
 
+   else:
+       worst=1
+       return ["0602201700402401170","0602201700402401170"] 
+   
 
     
 
@@ -153,35 +159,40 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
 
 
     amount=(int(percent_to_consider*len(sorted_combos))-index_to_consider)
-    if amount-index_to_consider % 2 !=0:
-        amount-=1
     prelim_parents=sorted_combos[index_to_consider:amount]
-    parents=choose_parents(prelim_parents,all_costs)
+    if len(prelim_parents) % 2 is 1:
+        prelim_parents=sorted_combos[index_to_consider:amount]
+
+
+    parents=choose_parents(prelim_parents,all_costs[index_to_consider:amount])
 
 
     children=[None]*len(sorted_combos)
 
     count=0
-    while count<len(parents):
-        beta=random.random()
-        crossover_point=random.range(0,6)
+    length=len(parents)
+    if length is 1:
+        return parents
+    else:
+        while count<length:
+            beta=random.random()
+            crossover_point=random.randint(0,5)
 
-        child1=convert_string_to_array(parents[random.randrage(index_to_consider,amount)])
-        child2=convert_string_to_array(parents[random.randrage(index_to_consider,amount)])
+            child1=convert_string_to_array(parents[count])
+            child2=convert_string_to_array(parents[count+1])
 
-        child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
-        child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
+            child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
+            child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
 
-        children[count]=convert_to_continuous_string(child1)
-        children[count+1]=convert_to_continuous_string(child2)
+            children.append(convert_to_continuous_string(child1))
+            children.append(convert_to_continuous_string(child2))
+            
+            count+=2
         
-        count+=2
-    
-        
-        #rafi needs to add functions that "refill" the remaining spots in the children array
-    while count<generation_size:
-        children.append(generate_chromosome())
-        count+=1
+            
+        while count<generation_size:
+            children.append(generate_chromosome())
+            count+=1
     return children
 
 def mutate(children):
@@ -238,7 +249,6 @@ def simulatefincombo(fincombo,stability1,stability2):
         return outputlist
 
 
-           
 
 
     

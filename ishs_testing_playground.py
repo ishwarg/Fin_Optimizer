@@ -2,6 +2,7 @@
 
 import os
 from numpy.core.fromnumeric import sort
+from numpy.lib import index_tricks
 import orhelper
 #import numpy as np
 import functions as fs
@@ -48,40 +49,43 @@ with orhelper.OpenRocketInstance() as instance:
         generationcount=0
         firststagefins=orh.get_component_named(rocket, "First Stage Fins")
         secondstagefins=orh.get_component_named(rocket, "Second Stage Fins")
+        haslength=True
+        while haslength:
+                while count<len(generation):
 
-        while count<len(generation):
 
+                        fins=fs.convert_string_to_array(generation[count])
+                        firststagefins.setTipChord(float(fins[0])/1000)
+                        firststagefins.setSweep(float(fins[2])/1000)
+                        firststagefins.setHeight(float(fins[4])/1000)
+                        secondstagefins.setTipChord(float(fins[1])/1000)
+                        secondstagefins.setSweep(float(fins[3])/1000)
+                        secondstagefins.setHeight(float(fins[5])/1000)
+                        
+                        
+                        orh.run_simulation(sim)
+                        data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
+                        events = orh.get_events(sim)
+                        eventsvaluesdic=list(events.values())
+                        times=list(data[FlightDataType.TYPE_TIME])
+                        altitude=list(data[FlightDataType.TYPE_ALTITUDE])
 
-                fins=fs.convert_string_to_array(generation[count])
-                firststagefins.setTipChord(float(fins[0])/1000)
-                firststagefins.setSweep(float(fins[2])/1000)
-                firststagefins.setHeight(float(fins[4])/1000)
-                secondstagefins.setTipChord(float(fins[1])/1000)
-                secondstagefins.setSweep(float(fins[3])/1000)
-                secondstagefins.setHeight(float(fins[5])/1000)
-                
-                
-                orh.run_simulation(sim)
-                data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
-                events = orh.get_events(sim)
-                eventsvaluesdic=list(events.values())
-                times=list(data[FlightDataType.TYPE_TIME])
-                altitude=list(data[FlightDataType.TYPE_ALTITUDE])
+                        stabilityoffrod=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[3])]
+                        stabilityatseperation=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[6])]
 
-                stabilityoffrod=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[3])]
-                stabilityatseperation=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[6])]
+                        #include that checks for flutter here if possible and add a true false into outputlist
 
-                #include that checks for flutter here if possible and add a true false into outputlist
+                        outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
 
-                outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
-
-                if outputs[1] or outputs[2]:
-                        rejectedcombos.append(count)
-                        rejectcount+=1
-                altitudes.append(outputs[0])
-                count+=1
+                        if outputs[1] or outputs[2]:
+                                rejectedcombos.append(count)
+                                rejectcount+=1
+                        altitudes.append(outputs[0])
+                        count+=1
+                        if rejectcount != len(altitudes):
+                                haslength=False
         
-        amountrejected=len(rejectedcombos)
+        amountrejected=rejectcount
         index_of_first_rejection=len(generation)-amountrejected
 
         for x in rejectedcombos:
@@ -91,51 +95,54 @@ with orhelper.OpenRocketInstance() as instance:
                generation.pop(x)
         
         costs=fs.calculate_cost(altitudes[:index_of_first_rejection])
-        costsandcombos= sort_combined_arrays(costs,generation)
+        costsandcombos= sort_combined_arrays(generation[:index_of_first_rejection], costs)
 
-        count=0
         costs=[]
         combos=[]
         for x in costsandcombos:
-                combos.append(x[1])
+                combos.append(x[0])
         for x in costsandcombos:
-                costs.append(x[0])
-        children=fs.crossover(combos,10, 0.7,costs)
+                costs.append(x[1])
+        children=fs.crossover(combos,0, 0.7,costs)
 
         #need to add statement that appends children so that it becomes an array of length generation_size
 
 
 while generationcount<num_generations:
         count=0
-        while count<len(children):
-                fins=fs.convert_string_to_array(generation[count])
-                firststagefins.setTipChord(float(fins[0])/1000)
-                firststagefins.setSweep(float(fins[2])/1000)
-                firststagefins.setHeight(float(fins[4])/1000)
-                secondstagefins.setTipChord(float(fins[1])/1000)
-                secondstagefins.setSweep(float(fins[3])/1000)
-                secondstagefins.setHeight(float(fins[5])/1000)
-                
-                
-                orh.run_simulation(sim)
-                data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
-                events = orh.get_events(sim)
-                eventsvaluesdic=list(events.values())
-                times=list(data[FlightDataType.TYPE_TIME])
-                altitude=list(data[FlightDataType.TYPE_ALTITUDE])
+        haslength=True
+        while haslength:
+                while count<len(children):
+                        fins=fs.convert_string_to_array(generation[count])
+                        firststagefins.setTipChord(float(fins[0])/1000)
+                        firststagefins.setSweep(float(fins[2])/1000)
+                        firststagefins.setHeight(float(fins[4])/1000)
+                        secondstagefins.setTipChord(float(fins[1])/1000)
+                        secondstagefins.setSweep(float(fins[3])/1000)
+                        secondstagefins.setHeight(float(fins[5])/1000)
+                        
+                        
+                        orh.run_simulation(sim)
+                        data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
+                        events = orh.get_events(sim)
+                        eventsvaluesdic=list(events.values())
+                        times=list(data[FlightDataType.TYPE_TIME])
+                        altitude=list(data[FlightDataType.TYPE_ALTITUDE])
 
-                stabilityoffrod=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[3])]
-                stabilityatseperation=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[6])]
+                        stabilityoffrod=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[3])]
+                        stabilityatseperation=data[FlightDataType.TYPE_STABILITY][times.index(eventsvaluesdic[6])]
 
-                #include that checks for flutter here if possible and add a true false into outputlist
+                        #include that checks for flutter here if possible and add a true false into outputlist
 
-                outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
+                        outputs=[max(altitude),stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
 
-                if outputs[1] or outputs[2]:
-                        rejectedcombos.append(count)
-                        rejectcount+=1
-                altitudes.append(outputs[0])
-                count+=1
+                        if outputs[1] or outputs[2]:
+                                rejectedcombos.append(count)
+                                rejectcount+=1
+                        altitudes.append(outputs[0])
+                        count+=1
+                        if rejectcount != len(altitudes):
+                                haslength=False
         
         amountrejected=len(rejectedcombos)
         index_of_first_rejection=len(children)-amountrejected
@@ -147,16 +154,16 @@ while generationcount<num_generations:
                children.pop(x)
         
         costs=fs.calculate_cost(altitudes[:index_of_first_rejection])
-        costsandcombos= sort_combined_arrays(costs,children)
+        costsandcombos= sort_combined_arrays(costs,children[:index_of_first_rejection])
 
         count=0
         costs=[]
         combos=[]
         for x in costsandcombos:
-                combos.append(x[1])
+                combos.append(x[0])
         for x in costsandcombos:
-                costs.append(x[0])
-        children=fs.crossover(combos,10, 0.7,costs)
+                costs.append(x[1])
+        children=fs.crossover(combos,0, 0.7,costs)
         #need to add statement that appends children so that it becomes an array of length generation_size
         generationcount+=1
 
