@@ -61,20 +61,21 @@ def create_generation(size):
 
 ################
 
+total_gen = 10
 
-import numpy as np
-
-total_gen = 15
 
 
 def generation_function_whateverItIs(generate_more):
     i = 0
-    arr = np.empty((0, 3), float)
+    arr = np.empty((0, 6), float)
     while (i < generate_more):
         a = np.random.uniform(0, 5)
         b = np.random.uniform(0, 5)
         c = np.random.uniform(0, 5)
-        temp = np.array([[a, b, c]])
+        d = np.random.uniform(0, 5)
+        e = np.random.uniform(0, 5)
+        f = np.random.uniform(0, 5)
+        temp = np.array([[a, b, c, d, e, f]])
         arr = np.append(arr, temp, axis = 0)
         i +=1
     return arr
@@ -109,15 +110,13 @@ def generate(valid_combos, generate_more):
 
 def valid_total_gen():
     generate_more = total_gen
-    valid_combos = np.empty((0,3), float) # Empty array
+    valid_combos = np.empty((0,6), float) # Empty array
     valid_combos, generate_more = generate(valid_combos, generate_more)
     while (generate_more > 0):
         valid_combos, generate_more = generate(valid_combos, generate_more)
         #print(np.size(valid_combos[:, 0]), generate_more)
     return valid_combos
 
-valid_combos_full = valid_total_gen()
-print(valid_combos_full)
 
 # This next step of evaluating cost functions will not be done until we have 1000 valid combinations
 
@@ -160,7 +159,7 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
 
     amount=(int(percent_to_consider*len(sorted_combos))-index_to_consider)
     prelim_parents=sorted_combos[index_to_consider:amount]
-    if len(prelim_parents) % 2 is 1:
+    if len(prelim_parents) % 2 == 1:
         prelim_parents=sorted_combos[index_to_consider:amount]
 
 
@@ -171,7 +170,7 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
 
     count=0
     length=len(parents)
-    if length is 1:
+    if length == 1:
         return parents
     else:
         while count<length:
