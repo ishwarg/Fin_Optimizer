@@ -3,7 +3,7 @@ import random
 import numpy as np
 import orhelper
 from orhelper import FlightDataType
-generation_size=20
+generation_size=10
 
 
 def generate_chromosome():
@@ -52,18 +52,14 @@ def convert_string_to_array(string):
 # with each solution stored as a string
 def create_generation(size):
     count=0
-    array=[None]*size
+    array=[]
     while(count<size):
-        array[count]=convert_to_continuous_string(generate_chromosome())
+        array.append(generate_chromosome())
         count+=1
-    print("done")
     return array
-
 ################
 
 total_gen = 10
-
-
 
 def generation_function_whateverItIs(generate_more):
     i = 0
@@ -117,7 +113,6 @@ def valid_total_gen():
         #print(np.size(valid_combos[:, 0]), generate_more)
     return valid_combos
 
-
 # This next step of evaluating cost functions will not be done until we have 1000 valid combinations
 
 
@@ -132,8 +127,8 @@ def calculate_height(valid_combos_full):
     return pred_h
 
 def calculate_cost(pred_h):
-    costs=[(x*-1 + 30500) for x in pred_h]
-    return np.square(costs)
+    costs=(30500-pred_h)**2
+    return costs
 
 
 def choose_parents(all_parents, all_costs):
@@ -146,10 +141,6 @@ def choose_parents(all_parents, all_costs):
     chosen_ones=random.choices(all_parents,weights=likelihood,k=len(all_parents))
 
     return chosen_ones
-
-   else:
-       worst=1
-       return ["0602201700402401170","0602201700402401170"] 
    
 
     
@@ -161,12 +152,13 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
     prelim_parents=sorted_combos[index_to_consider:amount]
     if len(prelim_parents) % 2 == 1:
         prelim_parents=sorted_combos[index_to_consider:amount]
+    prelim_parents=sorted_combos[index_to_consider:]
 
 
-    parents=choose_parents(prelim_parents,all_costs[index_to_consider:amount])
+    parents=choose_parents(prelim_parents,all_costs[index_to_consider:])
+    
 
-
-    children=[None]*len(sorted_combos)
+    children=[]
 
     count=0
     length=len(parents)
@@ -176,29 +168,28 @@ def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
         while count<length:
             beta=random.random()
             crossover_point=random.randint(0,5)
+    while count<length:
+        beta=random.random()
+        crossover_point=random.randint(0,5)
+        child1=parents[count]
+        child2=parents[count+1]
 
-            child1=convert_string_to_array(parents[count])
-            child2=convert_string_to_array(parents[count+1])
+        child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
+        child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
 
-            child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
-            child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
-
-            children.append(convert_to_continuous_string(child1))
-            children.append(convert_to_continuous_string(child2))
-            
-            count+=2
+        children.append(child1)
+        children.append(child2)
+        
+        count+=2
         
             
-        while count<generation_size:
-            children.append(generate_chromosome())
-            count+=1
+    while count<generation_size:
+        children.append(generate_chromosome())
+        count+=1
     return children
 
 def mutate(children):
     temp = children.copy()
-    for s in temp:
-        s = convert_string_to_array(s)
-    print(temp)
     prob_mutation = np.array([.25, 1, .3, .6, .9, 0])
     max_mutation = np.array([10, 5, 7, 10, 15, 3])
     for i in temp:
@@ -209,8 +200,7 @@ def mutate(children):
                 i[c] = i[c] + max_mutation[c]*np.random.uniform(-1, 1)
             c+=1
     temp.astype(int)
-    for s in temp:
-        s = convert_to_continuous_string(s)
+   
     return temp
 
 def simulatefincombo(fincombo,stability1,stability2):
