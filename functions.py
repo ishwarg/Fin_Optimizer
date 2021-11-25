@@ -1,13 +1,15 @@
 import os
 import random
 import numpy as np
+from numpy.core.fromnumeric import shape
 import orhelper
 from orhelper import FlightDataType
-generation_size=10
+
+
 
 
 def generate_chromosome():
-    
+    random.seed()
     #first two entries are the tip chords of both stages (first stage then second stage),
     #then sweep lengths of both stages and then the fin heights for both stages
     chromosome=[random.randrange(0,200),random.randrange(0,200),
@@ -52,9 +54,9 @@ def convert_string_to_array(string):
 # with each solution stored as a string
 def create_generation(size):
     count=0
-    array=[]
-    while(count<size):
-        array.append(generate_chromosome())
+    array=np.empty([size,6], dtype=int)
+    for x in range(size):
+        array[count]=np.array(generate_chromosome())
         count+=1
     return array
 ################
@@ -127,69 +129,60 @@ def calculate_height(valid_combos_full):
     return pred_h
 
 def calculate_cost(pred_h):
+    costs=np.empty(len(pred_h))
     costs=(30500-pred_h)**2
     return costs
 
 
 def choose_parents(all_parents, all_costs):
-
-   if len(all_costs):
+    random.seed()
     worst=max(all_costs)
     indexofmin=np.argmin(all_costs)
     all_costs[indexofmin]+=1
-    likelihood=[worst/x for x in all_costs]
-    chosen_ones=random.choices(all_parents,weights=likelihood,k=len(all_parents))
+    likelihood= worst/all_costs
+    length=len(all_parents)
+    chosen_ones=all_parents[random.choices(range(length),weights=likelihood,k=length),:]
+
 
     return chosen_ones
    
 
     
 
-def crossover(sorted_combos, index_to_consider, percent_to_consider, all_costs):
+def crossover(combos, index_to_consider, all_costs):
 
+    random.seed()
+    parents=choose_parents(combos[index_to_consider:,:],all_costs[index_to_consider:])
+    length=len(combos)
 
-    amount=(int(percent_to_consider*len(sorted_combos))-index_to_consider)
-    prelim_parents=sorted_combos[index_to_consider:amount]
-    if len(prelim_parents) % 2 == 1:
-        prelim_parents=sorted_combos[index_to_consider:amount]
-    prelim_parents=sorted_combos[index_to_consider:]
+    children=np.empty(np.shape(combos), dtype=np.int32)
 
-
-    parents=choose_parents(prelim_parents,all_costs[index_to_consider:])
-    
-
-    children=[]
 
     count=0
-    length=len(parents)
-    if length == 1:
-        return parents
-    else:
-        while count<length:
-            beta=random.random()
-            crossover_point=random.randint(0,5)
+    while count<index_to_consider:
+        children[count,:]=combos[count,:]
+        count+=1
+
+
     while count<length:
         beta=random.random()
         crossover_point=random.randint(0,5)
-        child1=parents[count]
-        child2=parents[count+1]
+        child1=parents[count-index_to_consider]
+        child2=parents[count+1-index_to_consider]
 
         child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
         child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
 
-        children.append(child1)
-        children.append(child2)
+        children[count]=child1
+        children[count+1]=child2
         
         count+=2
         
-            
-    while count<generation_size:
-        children.append(generate_chromosome())
-        count+=1
+  
     return children
 
 def mutate(children):
-    temp = children.copy()
+    temp = np.array(children)
     prob_mutation = np.array([.25, 1, .3, .6, .9, 0])
     max_mutation = np.array([10, 5, 7, 10, 15, 3])
     for i in temp:
