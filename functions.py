@@ -53,11 +53,12 @@ def convert_string_to_array(string):
 #creates a population of potential solutions with a "size" 
 # with each solution stored as a string
 def create_generation(size):
-    count=0
+    i=0
+    
     array=np.empty([size,6], dtype=int)
-    for x in range(size):
-        array[count]=np.array(generate_chromosome())
-        count+=1
+    while i<size:
+        array[i,:]=np.array(generate_chromosome())
+        i+=1
     return array
 ################
 
@@ -181,10 +182,9 @@ def crossover(combos, index_to_consider, all_costs):
   
     return children
 
-def mutate(children):
+def mutate(children,prob_mutation,max_mutation):
     temp = np.array(children)
-    prob_mutation = np.array([.25, 1, .3, .6, .9, 0])
-    max_mutation = np.array([10, 5, 7, 10, 15, 3])
+   
     for i in temp:
         will_mutate = (prob_mutation > np.random.uniform(0, 1))
         c = 0
