@@ -1,5 +1,9 @@
 # Final Genetic Algorithm
 
+'''
+Ishwarjot Grewal and Rafi Hakim
+'''
+
 # Imports
 import os
 from numpy.core.fromnumeric import sort
@@ -10,22 +14,28 @@ import functions as fs
 from orhelper import FlightDataType 
 from orhelper import FlightEvent
 
-# Depenedency will be flipped when the final GA file is made
-generation_size=10
 
+# Comments
+'''
 # Stopping condition (for now will be a simple max number of generations)
-num_generations=1
+# Required stabilities at different flight events are inputted
+# Probability of mutation per run and maximum integer +- mutation value
+# can be set individually for each parameter out of 6
+'''
 
-# required stabilities at different flight events
+# Target Variables
+target_height = 30500
 launchrod=1.55
 seperation=2.0
 
-# Probability of mutation per run and maximum integer +- mutation value
-# can be set individually for each parameter out of 6
-prob_mutation = np.array([.25, 1, .3, .6, .9, 0])
-max_mutation = np.array([10, 5, 7, 10, 15, 3])
+# Learning Variables:
+generation_size=10  # Input as integer
+num_generations=1  # Input as integer
+prob_mutation = np.array([.7, .7, .3, .3, .5, .5])  # Input as 1 by 6 array
+max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
 
-
+# Other Variables
+or_file_name = 'Tantalus.ork'  # Input as string
 
 
 # Start of Program
@@ -37,7 +47,7 @@ totalstabilities=np.empty((generation_size,2))
 
 with orhelper.OpenRocketInstance() as instance:
         orh = orhelper.Helper(instance)
-        doc = orh.load_doc(os.path.join('examples', 'Tantalus.ork'))
+        doc = orh.load_doc(os.path.join('examples', or_file_name))
         sim = doc.getSimulation(0)
         opts = sim.getOptions()
         rocket = opts.getRocket()
@@ -119,7 +129,7 @@ with orhelper.OpenRocketInstance() as instance:
         while generationcount<num_generations:
                 print("Current generation number: {}" .format(generationcount+1))
                 count=0
-                costs=fs.calculate_cost(apogees)       
+                costs=fs.calculate_cost(apogees, target_height)       
                 children=fs.crossover(generation,2,costs)
                 children=fs.mutate(children,prob_mutation,max_mutation)
                 while count<generation_size:

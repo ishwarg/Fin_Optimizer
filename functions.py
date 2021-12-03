@@ -25,9 +25,12 @@ def generate_chromosome():
     return chromosome
 
 
-#creates a population of potential solutions with a "size" 
-# with each solution stored as a string
 def create_generation(size):
+    '''
+    Create initial generation of size
+    Output is an array of dimensions size by 6
+    Not all outputs will pass the validity test based on simulated stability
+    '''
     i=0
     array=np.empty([size,6], dtype=int)
     while i<size:
@@ -36,9 +39,13 @@ def create_generation(size):
     return array
 
 
-def calculate_cost(pred_h):
+def calculate_cost(pred_h, target_height):
+    '''
+    Cost function. Inputs are the simulated value for 
+    height as well as the target height.
+    '''
     costs=np.empty(len(pred_h))
-    costs=(30500-pred_h)**2
+    costs=(target_height-pred_h)**2
     return costs
 
 
@@ -51,9 +58,7 @@ def choose_parents(all_parents, all_costs):
     length=len(all_parents)
     chosen_ones=all_parents[random.choices(range(length),weights=likelihood,k=length),:]
     return chosen_ones
-   
 
-    
 
 def crossover(combos, index_to_consider, all_costs):
     random.seed()

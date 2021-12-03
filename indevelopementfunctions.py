@@ -4,6 +4,7 @@ import numpy as np
 from numpy.core.fromnumeric import shape
 import orhelper
 from orhelper import FlightDataType
+import disusedfunctions as disfun
 
 
 def simulatefincombo(fincombo,stability1,stability2):
@@ -14,7 +15,7 @@ def simulatefincombo(fincombo,stability1,stability2):
         opts = sim.getOptions()
         rocket = opts.getRocket()
 
-        fins=convert_string_to_array(fincombo)
+        fins=disfun.convert_string_to_array(fincombo)
         firststagefins=orh.get_component_named(rocket, "First Stage Fins")
         secondstagefins=orh.get_component_named(rocket, "Second Stage Fins")
         firststagefins.setTipChord(float(fins[0])/1000)
