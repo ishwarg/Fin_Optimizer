@@ -7,12 +7,12 @@ from orhelper import FlightDataType
 
 
 def generate_chromosome():
-    random.seed()
     '''
     First two entries are the tip chords of both stages (first stage then second stage),
     then sweep lengths of both stages and then the fin heights for both stages.
     Output a chromosome with valid dimensions.
     '''
+    random.seed()
     chromosome=[random.randrange(0,200),random.randrange(0,200),
     random.randrange(0,200),random.randrange(0,200), 
     random.randrange(100,200),random.randrange(100,200)]
@@ -50,6 +50,14 @@ def calculate_cost(pred_h, target_height):
 
 
 def choose_parents(all_parents, all_costs):
+    '''
+    One input is an array of size by 6, which is a current batch of all parents.
+    The second input is the corresponding size by 1 dimension array of associated
+    costs for each parent. Returns array of chosen parents based on likelihood
+    of parent. Output array size is same as input "all_parents (size by 6)."
+    A single parent may be selected multiple times, and therefore be paired up
+    to form multiple children, especially if the parent has a favorable cost value.  
+    '''
     random.seed()
     worst=max(all_costs)
     indexofmin=np.argmin(all_costs)
@@ -61,6 +69,10 @@ def choose_parents(all_parents, all_costs):
 
 
 def crossover(combos, index_to_consider, all_costs):
+    '''
+    Cross over the chosen parents to create children until children
+    is the same shape as the full original size by 6 array.
+    '''
     random.seed()
     parents=choose_parents(combos[index_to_consider:,:],all_costs[index_to_consider:])
     length=len(combos)
@@ -88,6 +100,13 @@ def crossover(combos, index_to_consider, all_costs):
     return children
 
 def mutate(children,prob_mutation,max_mutation):
+    '''
+    Mutation function takes in a fin combinations array of dimensions
+    size by 6, and two 1 by 6 arrays representing the probability of mutation
+    for each parameter of the fins as well as the maximum amount of mutation
+    for each parameter. Mutate outputs a size by 6 array of fin combinations,
+    some of which have been mutated in one or more combination parameters. 
+    '''
     temp = np.array(children)
     for i in temp:
         will_mutate = (prob_mutation > np.random.uniform(0, 1))
