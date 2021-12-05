@@ -118,7 +118,57 @@ def mutate(children,prob_mutation,max_mutation):
     return temp.astype(int)
 
 
+def get_flutter(root_chord, tip_chord, G, S, t, b, a, P, P0):
+  '''
+  These equations (get_flutter and get_divergence) are based on sources:
+
+  https://www.abbottaerospace.com/downloads/naca-tn-4197-summary-of-flutter-experiences
+  -as-a-guide-to-the-preliminary-design-of-lifting-surfaces-on-missiles/
+
+  http://www.aerorocket.com/finsim.html
+
+  https://apogeerockets.com/education/downloads/Newsletter291.pdf
+  
+  We found mistakes in the 2nd source (aerorocket) with regards to the lambda definition.
+  These mistakes are corrected in our implementation of the equation.
+
+  We recognize certain simplifications in these equations:
+  Applies most accurately to trapezoidal fins, where root_chord and fin_chord
+  are parallel.
+
+  root_chord, tip_chord, and b are all parameters of the fin, used throughout genetic algorithm
+  S, surface area, can be calculated from other parameters
+  G and t, shear modulus and fin thickness, are inputs to the program defined at the top
+  a and P, the speed of sound and atmospheric presures at maximum velocity location are extracted
+  ... from OpenRocket during simulation step
+  P0, the atmospheric presure at sea level at standard temperature,
+  ... is a natural constant defined at the top of algorithm
+
+  get_flutter returns the velocity at which fin flutter begins to occur
+  get_divergence returns the velocity at which divergence begins to occur
+  Flutter velocity is almost always lower than divergence velocity
+  Divergence velocity should absolutely NEVER be exceeded
+  Divergence velocity refers to the speed where the fins will
+  ... increasingly flutter in a feedback loop.
+  
+  Make sure to leave a margin of error. The inputed shear modulus, G,
+  ... should be the minimum value possible. Shear modulus in composites
+  ... can vary significantly depending on direction etc. This number may be taken
+  ... from manufacture specifications or elsewhere
+
+  
+  '''
+  lam = tip_chord/root_chord
+  AR = (b**2)/S
+  denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
+  return a * np.sqrt(G / denom)
 
 
-
+def get_divergence(root_chord, tip_chord, G, S, t, b, a, P, P0):
+  '''
+  Refer to comments in get_flutter
+  '''
+  AR = (b**2)/S
+  calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2 
+  return a * np.sqrt(G / calc)
 

@@ -36,6 +36,11 @@ max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
+G = "shear modulus" # may differ in directions, use minimum value with safety factor 
+t = "fin thickness"
+
+# Natural and Convenient Variables
+P0 = "atmospheric presure @ sea level temp height"
 
 
 # Start of Program
