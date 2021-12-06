@@ -25,14 +25,18 @@ from orhelper import FlightEvent
 
 # Target Variables
 target_height = 30500
-launchrod=1.55
-seperation=2.0
+launchrod=1.55 # minimum stability off rod
+seperation=2.0 # minimum stability at seperation
+offrod_target = 2 # ideal stability off rod
+sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
 generation_size=10  # Input as integer
 num_generations=1  # Input as integer
 prob_mutation = np.array([.7, .7, .3, .3, .5, .5])  # Input as 1 by 6 array
 max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
+offrod_mul = 10 # recommended to be set to around 
+sep_mul = 10 # recommended to be set to around 
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
@@ -134,7 +138,8 @@ with orhelper.OpenRocketInstance() as instance:
         while generationcount<num_generations:
                 print("Current generation number: {}" .format(generationcount+1))
                 count=0
-                costs=fs.calculate_cost(apogees, target_height)       
+                costs=fs.calculate_cost(apogees, totalstabilities, target_height, offrod_target,
+                sep_target, offrod_mul, sep_mul)
                 children=fs.crossover(generation,2,costs)
                 children=fs.mutate(children,prob_mutation,max_mutation)
                 while count<generation_size:

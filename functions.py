@@ -39,14 +39,18 @@ def create_generation(size):
     return array
 
 
-def calculate_cost(pred_h, target_height):
+def calculate_cost(pred_h, totalstabilities, target_height, offrod_target, sep_target, offrod_mul, sep_mul):
     '''
     Cost function. Inputs are the simulated value for 
-    height as well as the target height.
+    height, stability off rod, and stability at seperation.
+    Additionally the target height and target stability off rod and at seperation.
+    Finally, the multipliers for importance of offrod stability and seperation stability.
     '''
     costs=np.empty(len(pred_h))
-    costs=(target_height-pred_h)**2
+    costs=((target_height-pred_h)**2 + offrod_mul*(offrod_target-totalstabilities[0])**2 + 
+    sep_mul*(sep_target-totalstabilities[1])**2)
     return costs
+
 
 
 def choose_parents(all_parents, all_costs):
