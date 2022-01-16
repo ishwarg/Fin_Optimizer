@@ -13,6 +13,7 @@ import numpy as np
 import functions as fs
 from orhelper import FlightDataType 
 from orhelper import FlightEvent
+import time
 
 
 # Comments
@@ -53,7 +54,7 @@ generation=fs.create_generation(generation_size)
 
 apogees=np.empty(generation_size)
 totalstabilities=np.empty((generation_size,2))
-
+start=time.time()
 with orhelper.OpenRocketInstance() as instance:
         orh = orhelper.Helper(instance)
         doc = orh.load_doc(os.path.join('examples', or_file_name))
@@ -131,6 +132,7 @@ with orhelper.OpenRocketInstance() as instance:
                         totalstabilities[count,0]=stabilityoffrod
                         totalstabilities[count,1]=stabilityatseperation
                 count+=1
+        print(time.time()-start)
         children=generation       
                
         # need to add statement that appends children so that it becomes an array of length generation_size
