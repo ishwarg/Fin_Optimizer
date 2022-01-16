@@ -20,6 +20,7 @@ import time
 import sys
 import locale
 
+start=time.time()
 
 
 # Comments
@@ -38,8 +39,8 @@ offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
-generation_size=50# Input as even integer
-num_generations=50 # Input as integer
+generation_size=100# Input as even integer
+num_generations=100 # Input as integer
 prob_mutation = np.array([.7, .7, .3, .3, .5, .5])  # Input as 1 by 6 array
 max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
 offrod_mul = 10 # recommended to be set to around 
@@ -52,6 +53,8 @@ t = "fin thickness"
 apogees=np.empty(generation_size)
 children=fs.create_generation(generation_size)
 locale.setlocale(locale.LC_ALL, '')
+willflutter=True
+willdiverge=False
 
 
 # Natural and Convenient Variables
@@ -87,8 +90,8 @@ def simulate_fin_combo(index):
 	ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
 	apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
 	#include that checks for flutter here if possible and add a true false into outputlist
-
-	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
+	willflutter=fs.get_flutter(0.3,chromosome[0],)
+	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),]
 	
 	
 	apogees[index]=apogee
@@ -193,7 +196,7 @@ index=ind[0]
 
 print(apogees[index])
 print(children[index,:])
-
+print(time.time()-start)
 	
 
 
