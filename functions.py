@@ -122,7 +122,7 @@ def mutate(children,prob_mutation,max_mutation):
     return temp.astype(int)
 
 
-def get_flutter(root_chord, tip_chord, G, S, t, b, a, P, P0):
+def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   '''
   These equations (get_flutter and get_divergence) are based on sources:
 
@@ -185,7 +185,7 @@ def get_flutter(root_chord, tip_chord, G, S, t, b, a, P, P0):
   return (a * np.sqrt(G / denom))*mph_to_mpers
 
 
-def get_divergence(root_chord, tip_chord, G, S, t, b, a, P, P0):
+def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   '''
   Refer to comments in get_flutter
   All inputs are in meters, meters/second, and pascals. Conversions neccesary 
