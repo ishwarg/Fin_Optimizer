@@ -12,7 +12,7 @@ t = .003 #"fin thickness"
 
 # taken from open rocket at maximum velocity
 a = 316 #"speed of sound @ sim temp height" -> taken to be m/s
-P = 95000 #"atmospheric presure @ sim temp height" pascal
+P = 47000 #"atmospheric presure @ sim temp height" pascal
 
 root_chord = 0.3 # in meters
 tip_chord = 0.07 # in meters
