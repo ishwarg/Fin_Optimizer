@@ -31,6 +31,8 @@ start=time.time()
 # can be set individually for each parameter out of 6
 '''
 
+## The following are inputs:
+
 # Target Variables
 target_height = 30500
 launchrod=1.55 # minimum stability off rod
@@ -41,10 +43,10 @@ sep_target = 2 # ideal stability at seperation
 # Learning Variables:
 generation_size=100# Input as even integer
 num_generations=100 # Input as integer
-prob_mutation = np.array([.7, .7, .3, .3, .5, .5])  # Input as 1 by 6 array
-max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
-offrod_mul = 10 # recommended to be set to around 
-sep_mul = 10 # recommended to be set to around 
+prob_mutation = np.array([.2, .2, .2, .2, .2, .2])  # Input as 1 by 6 array
+max_mutation = np.array([10, 10, 8, 8, 6, 6])  # Input as 1 by 6 array
+offrod_mul = 200 # recommended to be set in range 100 to 500
+sep_mul = 200 # recommended to be set in range 100 to 500
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
