@@ -47,8 +47,7 @@ def calculate_cost(pred_h, totalstabilities, target_height, offrod_target, sep_t
     Finally, the multipliers for importance of offrod stability and seperation stability.
     '''
     costs=np.empty(len(pred_h))
-    costs=((target_height-pred_h)**2 + offrod_mul*(offrod_target-totalstabilities[0])**2 + 
-    sep_mul*(sep_target-totalstabilities[1])**2)
+    costs=(target_height-pred_h)**2 + offrod_mul*(offrod_target-totalstabilities[:,0])**2 + sep_mul*(sep_target-totalstabilities[:,1])**2
     return costs
 
 
@@ -175,4 +174,5 @@ def get_divergence(root_chord, tip_chord, G, S, t, b, a, P, P0):
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2 
   return a * np.sqrt(G / calc)
+
 
