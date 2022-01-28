@@ -48,7 +48,11 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   lam = tip_chord/root_chord
   AR = (b**2)/S
   denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
-  return (a * np.sqrt(G / denom))*mph_to_mpers
+  model1 = (a * np.sqrt(G / denom))*mph_to_mpers
+  #model2 = 1.223*a*np.exp(np.sqrt(P0/P))*(np.sqrt(G/P0))*(np.sqrt(((t/AR)**3)*((2+b)/(1+lam))))
+  #print(model1, model2)
+  #return (model1 + model2) / 2
+  return model1
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):

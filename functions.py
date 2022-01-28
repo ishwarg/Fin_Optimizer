@@ -177,11 +177,12 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   G = G*pasc_to_psi
   P = P*pasc_to_psi
   P0 = P0*pasc_to_psi
-  # formula
+  # formula 1
   lam = tip_chord/root_chord
   AR = (b**2)/S
   denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
-  return (a * np.sqrt(G / denom))*mph_to_mpers
+  model1 = (a * np.sqrt(G / denom))*mph_to_mpers
+  return model1
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
