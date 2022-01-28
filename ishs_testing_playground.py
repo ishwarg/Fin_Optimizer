@@ -32,33 +32,36 @@ start=time.time()
 '''
 
 # Target Variables
-target_height = 30500
+target_height = 9296.4
 launchrod=1.55 # minimum stability off rod
 seperation=2.0 # minimum stability at seperation
 offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
-generation_size=100# Input as even integer
-num_generations=100 # Input as integer
-prob_mutation = np.array([.7, .7, .3, .3, .5, .5])  # Input as 1 by 6 array
-max_mutation = np.array([16, 16, 14, 14, 12, 12])  # Input as 1 by 6 array
+generation_size=50# Input as even integer
+num_generations=50 # Input as integer
+prob_mutation = np.array([.02, .02, .02, .02, .02, .02])  # Input as 1 by 6 array
+max_mutation = np.array([2, 2, 2, 2, 2, 2])  # Input as 1 by 6 array
 offrod_mul = 10 # recommended to be set to around 
 sep_mul = 10 # recommended to be set to around 
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
-G = "shear modulus" # may differ in directions, use minimum value with safety factor 
+G = 30000000000 # may differ in directions, use minimum value with safety factor 
 t = "fin thickness"
 apogees=np.empty(generation_size)
 children=fs.create_generation(generation_size)
 locale.setlocale(locale.LC_ALL, '')
-willflutter=True
+totalstabilities=np.empty((generation_size,2))
+willflutter=False
 willdiverge=False
+soundspeed=0
+pressure=0
 
 
 # Natural and Convenient Variables
-P0 = "atmospheric presure @ sea level temp height"
+P0 = 101325
 
 #simulating a single combination for multi threading purposes
 def simulate_fin_combo(index):
@@ -74,32 +77,41 @@ def simulate_fin_combo(index):
 	secondstagefins.setTipChord(float(chromosome[1])/1000)
 	secondstagefins.setSweep(float(chromosome[3])/1000)
 	secondstagefins.setHeight(float(chromosome[5])/1000)
+
+	
+
 	orh.run_simulation(sim)
-	data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
+	data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL, FlightDataType.TYPE_AIR_PRESSURE,FlightDataType.TYPE_SPEED_OF_SOUND])
 	events = orh.get_events(sim)
 			
 	ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.LAUNCHROD])
 	
 	
-	
 	stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind[0]]
-	
 	ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.STAGE_SEPARATION])
 	stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind[0]]
 	
 	ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
+
 	apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
+	totalstabilities[index,0]=stabilityoffrod[0]
+	totalstabilities[index,1]=stabilityatseperation[0]
+	ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+
+	soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
+	pressure=data[FlightDataType.TYPE_AIR_PRESSURE][ind]
 	#include that checks for flutter here if possible and add a true false into outputlist
-	willflutter=fs.get_flutter(0.3,chromosome[0],)
-	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),]
+		
+	willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+	willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge]
 	
 	
 	apogees[index]=apogee
 	
-		
 	while outputs[1] or outputs[2]:
+
 		chromosome=fs.generate_chromosome()
-		
 		firststagefins.setTipChord(float(chromosome[0])/1000)
 		firststagefins.setSweep(float(chromosome[2])/1000)
 		firststagefins.setHeight(float(chromosome[4])/1000)
@@ -109,18 +121,31 @@ def simulate_fin_combo(index):
 		
 		
 		orh.run_simulation(sim)
-		data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL])
+		data=orh.get_timeseries(sim, [FlightDataType.TYPE_TIME,FlightDataType.TYPE_ALTITUDE, FlightDataType.TYPE_STABILITY,FlightDataType.TYPE_VELOCITY_TOTAL,FlightDataType.TYPE_AIR_PRESSURE,FlightDataType.TYPE_SPEED_OF_SOUND])
 		events = orh.get_events(sim)
 
 		ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.LAUNCHROD])
+	
 		stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind[0]]
 		ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.STAGE_SEPARATION])
 		stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind[0]]
 		ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
 		apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
-		# include that checks for flutter here if possible and add a true false into outputlist
-
-		outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL])]
+		
+		
+		totalstabilities[index,0]=stabilityoffrod[0]
+		totalstabilities[index,1]=stabilityatseperation[0]
+		ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+		
+		soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
+		
+		pressure=data[FlightDataType.TYPE_AIR_PRESSURE][ind]
+		
+		#include that checks for flutter here if possible and add a true false into outputlist
+			
+		willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+		willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+		outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge]
 		
 		
 		apogees[index]=apogee
@@ -139,7 +164,7 @@ def simulate_fin_combo(index):
 threads=[None]*generation_size
 
 
-totalstabilities=np.empty((generation_size,2))
+
 
 start=time.time()
 with orhelper.OpenRocketInstance() as instance:
@@ -164,6 +189,7 @@ with orhelper.OpenRocketInstance() as instance:
 
 	for x in threads:
 		x.join()
+		
 	
 	while generationcount<num_generations:
 			
@@ -172,6 +198,7 @@ with orhelper.OpenRocketInstance() as instance:
 		
 		costs=fs.calculate_cost(apogees, totalstabilities, target_height, offrod_target,
 		sep_target, offrod_mul, sep_mul)
+		print(costs)
 		averagecost=np.average(costs)
 		print(locale.format("%d", averagecost, grouping=True))
 		children=fs.crossover(children,2,costs)
@@ -197,6 +224,5 @@ index=ind[0]
 print(apogees[index])
 print(children[index,:])
 print(time.time()-start)
-	
-
+print()
 
