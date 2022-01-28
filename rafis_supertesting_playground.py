@@ -26,14 +26,16 @@ P0 = 101325 #"atmospheric presure @ sea level temp height" pascal
 
 def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   '''
-  All inputs are in meters, meters/second, and pascals. Conversions neccesary 
-  since equation sources use units of freedom/eagle.
+  All inputs to the top function are in meters, meters/second, and pascals. Conversions neccesary 
+  since equation sources use a mixture of units: freedom/eagle and stars/stripe.
   '''
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
   pasc_to_psi = (1/6895.000)
   mph_to_mpers = (1/2.237)
+  mph_to_ftpers = 1.467
+  ftpers_to_mpers = (1/3.281)
   # conversions
   root_chord = root_chord*m_to_inch
   tip_chord = tip_chord*m_to_inch
@@ -49,17 +51,14 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   AR = (b**2)/S
   denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
   model1 = (a * np.sqrt(G / denom))*mph_to_mpers
-  #model2 = 1.223*a*np.exp(np.sqrt(P0/P))*(np.sqrt(G/P0))*(np.sqrt(((t/AR)**3)*((2+b)/(1+lam))))
-  #print(model1, model2)
-  #return (model1 + model2) / 2
-  return model1
+  a = a*mph_to_ftpers
+  model2 = a*(np.sqrt(G / ((1.337*(AR**3)*P*(lam+1)) / (2*(AR+2)*(t/root_chord)**3)))) * ftpers_to_mpers
+  print("model1:", model1, "model2:", model2)
+  return (model1 + model2) / 2
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
-  '''
-  All inputs are in meters, meters/second, and pascals. Conversions neccesary 
-  since equation sources use units of freedom/eagle.
-  '''
+  scalarMultiplier = 1.3
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -78,7 +77,7 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   # formula  
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2
-  return a * np.sqrt(G / calc)*mph_to_mpers
+  return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier
 
 print(get_flutter(root_chord, tip_chord, G, t, b, a, P, P0))
 print(get_divergence(root_chord, tip_chord, G, t, b, a, P, P0))

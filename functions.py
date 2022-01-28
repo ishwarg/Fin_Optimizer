@@ -159,14 +159,26 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   ... can vary significantly depending on direction etc. This number may be taken
   ... from manufacture specifications or elsewhere
 
-  All inputs to the function are in meters, meters/second, and pascals. 
-  Conversions neccesary since equation sources use units of freedom/eagle.
+  All inputs to the top function are in meters, meters/second, and pascals. Conversions neccesary 
+  since equation sources use a mixture of units: freedom/eagle and stars/stripe.
+
+  Further info:
+
+  Model 1 is the NACA 4197 model. This model appears to underestimate the flutter and divergence
+  speeds consistently. However, it is also the "most trustworthy" / original source we found
+
+  Model 2 is taken from the Apogee Rockets source. It consistently estimates higher values than
+  those of the NACA model, however, the Model 2 estimates are more consitent with other models
+  found. This genetic algorithm will average the two Models rather than underestimate the value,
+  so that it doesn't get stuck forever. The final fin combination can be tested using any model manually.
   '''
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
   pasc_to_psi = (1/6895.000)
   mph_to_mpers = (1/2.237)
+  mph_to_ftpers = 1.467
+  ftpers_to_mpers = (1/3.281)
   # conversions
   root_chord = root_chord*m_to_inch
   tip_chord = tip_chord*m_to_inch
@@ -182,7 +194,9 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   AR = (b**2)/S
   denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
   model1 = (a * np.sqrt(G / denom))*mph_to_mpers
-  return model1
+  a = a*mph_to_ftpers # a converted to feet per second for Model2 input
+  model2 = a*(np.sqrt(G / ((1.337*(AR**3)*P*(lam+1)) / (2*(AR+2)*(t/root_chord)**3)))) * ftpers_to_mpers
+  return (model1 + model2) / 2
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
@@ -190,7 +204,15 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   Refer to comments in get_flutter
   All inputs are in meters, meters/second, and pascals. Conversions neccesary 
   since equation sources use units of freedom/eagle.
+
+  Further info:
+
+  The get_divergence function uses a scalar multiplier in order to achieve results similar to
+  the fin flutter Model1 / Model2 combination. This is only done for the purpose of avoiding
+  slowing down the genetic algorithm. The final combination can be tested for flutter-divergence
+  in any way manually.
   '''
+  scalarMultiplier = 1.3 #for the sake of the gen_alg: set btw 1.2 and 1.5?
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -209,7 +231,7 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   # formula  
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2
-  return a * np.sqrt(G / calc)*mph_to_mpers
+  return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier
 
 
 
