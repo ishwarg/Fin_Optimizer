@@ -31,6 +31,8 @@ start=time.time()
 # can be set individually for each parameter out of 6
 '''
 
+## The following are inputs:
+
 # Target Variables
 target_height = 9296.4
 launchrod=1.55 # minimum stability off rod
