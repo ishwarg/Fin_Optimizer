@@ -172,6 +172,7 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   found. This genetic algorithm will average the two Models rather than underestimate the value,
   so that it doesn't get stuck forever. The final fin combination can be tested using any model manually.
   '''
+  SAFETY_MARGIN = 0.8
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -196,7 +197,7 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   model1 = (a * np.sqrt(G / denom))*mph_to_mpers
   a = a*mph_to_ftpers # a converted to feet per second for Model2 input
   model2 = a*(np.sqrt(G / ((1.337*(AR**3)*P*(lam+1)) / (2*(AR+2)*(t/root_chord)**3)))) * ftpers_to_mpers
-  return (model1 + model2) / 2
+  return ((model1 + model2) / 2) * SAFETY_MARGIN
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
@@ -212,7 +213,8 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   slowing down the genetic algorithm. The final combination can be tested for flutter-divergence
   in any way manually.
   '''
-  scalarMultiplier = 1.3 #for the sake of the gen_alg: set btw 1.2 and 1.5?
+  SAFETY_MARGIN = 0.8
+  scalarMultiplier = 1.3 #for the sake of the gen_alg: set btw 1.0 and 1.5?
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -231,7 +233,7 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   # formula  
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2
-  return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier
+  return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier * SAFETY_MARGIN
 
 
 

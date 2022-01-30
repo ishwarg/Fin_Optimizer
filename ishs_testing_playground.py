@@ -45,8 +45,8 @@ generation_size=50# Input as even integer
 num_generations=50 # Input as integer
 prob_mutation = np.array([.02, .02, .02, .02, .02, .02])  # Input as 1 by 6 array
 max_mutation = np.array([2, 2, 2, 2, 2, 2])  # Input as 1 by 6 array
-offrod_mul = 10 # recommended to be set to around 
-sep_mul = 10 # recommended to be set to around 
+offrod_mul = 1 # recommended to be set to around 
+sep_mul = 1 # recommended to be set to around 
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
