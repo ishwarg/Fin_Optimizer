@@ -65,6 +65,18 @@ pressure=0
 # Natural and Convenient Variables
 P0 = 101325
 
+# initialize
+vis_costs1 = []
+vis_costs2 = []
+vis_apogees = []
+vis_children0 = []
+vis_children1 = []
+vis_children2 = []
+vis_children3 = []
+vis_children4 = []
+vis_children5 = []
+vis_generationcount = []
+
 #simulating a single combination for multi threading purposes
 def simulate_fin_combo(index):
 	
@@ -213,6 +225,19 @@ with orhelper.OpenRocketInstance() as instance:
 		for x in threads:
 			x.join()
 		print(children)
+		
+		# visualizations
+		vis_costs1 = vis_costs1.append(np.min(costs))
+		vis_costs2 = vis_costs2.append(np.max(costs))
+		vis_apogees = vis_apogees.append(np.mean(apogees))
+		vis_children0 = vis_children0.append(np.mean(children[:, 0]))
+		vis_children1 = vis_children1.append(np.mean(children[:, 1]))
+		vis_children2 = vis_children2.append(np.mean(children[:, 2]))
+		vis_children3 = vis_children3.append(np.mean(children[:, 3]))
+		vis_children4 = vis_children4.append(np.mean(children[:, 4]))
+		vis_children5 = vis_children5.append(np.mean(children[:, 5]))
+		vis_generationcount = vis_generationcount.append(generationcount)
+
 		generationcount+=1
 		
 
@@ -227,4 +252,6 @@ print(apogees[index])
 print(children[index,:])
 print(time.time()-start)
 print()
+
+fs.visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount)
 

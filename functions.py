@@ -4,6 +4,7 @@ import numpy as np
 from numpy.core.fromnumeric import shape
 import orhelper
 from orhelper import FlightDataType
+import matplotlib.pyplot as plt
 
 
 def generate_chromosome():
@@ -234,6 +235,29 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2
   return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier * SAFETY_MARGIN
+
+
+def visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount):
+    plt.scatter((vis_costs1), vis_generationcount)
+    plt.scatter((vis_costs2), vis_generationcount)
+    plt.show()
+
+    plt.scatter((vis_apogees), vis_generationcount)
+    plt.show()
+
+    plt.scatter(vis_children0, vis_generationcount, c = 'r', label = 'tipchord length') # tipchord fin1
+    plt.scatter(vis_children2, vis_generationcount, c = 'g') # sweep length fin1
+    plt.scatter(vis_children4, vis_generationcount, c = 'b') # fin height fin1
+    plt.legend()
+    plt.show()
+    
+    plt.scatter(vis_children1, vis_generationcount, c = 'r', label = 'tipchord length') # tipchord fin2
+    plt.scatter(vis_children3, vis_generationcount, c = 'g') # sweep length fin2
+    plt.scatter(vis_children5, vis_generationcount, c = 'b') # fin height fin2
+    plt.legend()
+    plt.show()
+
+
 
 
 
