@@ -1,3 +1,0 @@
-# Fin_Optimizer
-
-hi
