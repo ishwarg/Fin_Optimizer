@@ -1,7 +1,7 @@
 import numpy as np
 
 
-# Murican Eagle Units:
+# Imperial Units:
 # Presure in Psi
 # Speeds in mph
 # Lengths in inches
