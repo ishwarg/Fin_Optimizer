@@ -183,7 +183,7 @@ threads=[None]*generation_size
 start=time.time()
 with orhelper.OpenRocketInstance() as instance:
 	orh = orhelper.Helper(instance)
-	doc = orh.load_doc(os.path.join('examples', or_file_name))
+	doc = orh.load_doc(os.path.join('ork files', or_file_name))
 	sim = doc.getSimulation(0)
 	opts = sim.getOptions()
 	rocket = opts.getRocket()
