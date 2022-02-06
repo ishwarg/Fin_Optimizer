@@ -41,8 +41,8 @@ offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
-generation_size=50# Input as even integer
-num_generations=50 # Input as integer
+generation_size=10# Input as even integer
+num_generations=15 # Input as integer
 prob_mutation = np.array([.02, .02, .02, .02, .02, .02])  # Input as 1 by 6 array
 max_mutation = np.array([2, 2, 2, 2, 2, 2])  # Input as 1 by 6 array
 offrod_mul = 1 # recommended to be set to around 
@@ -50,7 +50,7 @@ sep_mul = 1 # recommended to be set to around
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
-G = 30000000000 # may differ in directions, use minimum value with safety factor 
+G = 11000000000 # may differ in directions, use minimum value with safety factor 
 t = "fin thickness"
 apogees=np.empty(generation_size)
 children=fs.create_generation(generation_size)
@@ -108,8 +108,8 @@ def simulate_fin_combo(index):
 	ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
 
 	apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
-	totalstabilities[index,0]=stabilityoffrod[0]
-	totalstabilities[index,1]=stabilityatseperation[0]
+	totalstabilities[index,0]=stabilityoffrod
+	totalstabilities[index,1]=stabilityatseperation
 	ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
 
 	soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
@@ -123,7 +123,7 @@ def simulate_fin_combo(index):
 	
 	apogees[index]=apogee
 	
-	while outputs[1] or outputs[2]:
+	while outputs[1] or outputs[2] or outputs[4] or outputs[5]:
 
 		chromosome=fs.generate_chromosome()
 		firststagefins.setTipChord(float(chromosome[0])/1000)
@@ -147,8 +147,8 @@ def simulate_fin_combo(index):
 		apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
 		
 		
-		totalstabilities[index,0]=stabilityoffrod[0]
-		totalstabilities[index,1]=stabilityatseperation[0]
+		totalstabilities[index,0]=stabilityoffrod
+		totalstabilities[index,1]=stabilityatseperation
 		ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
 		
 		soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
@@ -227,7 +227,7 @@ with orhelper.OpenRocketInstance() as instance:
 		print(children)
 		
 		# visualizations
-		vis_costs1 = vis_costs1.append(np.min(costs))
+		'''vis_costs1 = vis_costs1.append(np.min(costs))
 		vis_costs2 = vis_costs2.append(np.max(costs))
 		vis_apogees = vis_apogees.append(np.mean(apogees))
 		vis_children0 = vis_children0.append(np.mean(children[:, 0]))
@@ -236,7 +236,7 @@ with orhelper.OpenRocketInstance() as instance:
 		vis_children3 = vis_children3.append(np.mean(children[:, 3]))
 		vis_children4 = vis_children4.append(np.mean(children[:, 4]))
 		vis_children5 = vis_children5.append(np.mean(children[:, 5]))
-		vis_generationcount = vis_generationcount.append(generationcount)
+		vis_generationcount = vis_generationcount.append(generationcount)'''
 
 		generationcount+=1
 		
@@ -253,5 +253,5 @@ print(children[index,:])
 print(time.time()-start)
 print()
 
-fs.visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount)
+#fs.visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount)
 
