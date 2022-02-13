@@ -6,18 +6,13 @@ Ishwarjot Grewal and Rafi Hakim
 
 # Imports
 import os
-from numpy.core.fromnumeric import sort
-from numpy.lib import index_tricks
-from numpy.lib.function_base import average
 import orhelper
 import numpy as np
 import functions as fs
 from orhelper import FlightDataType 
 from orhelper import FlightEvent
-
 import threading
 import time
-import sys
 import locale
 
 start=time.time()
@@ -41,8 +36,8 @@ offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
-generation_size=10# Input as even integer
-num_generations=15 # Input as integer
+generation_size=50# Input as even integer
+num_generations=10 # Input as integer
 prob_mutation = np.array([.02, .02, .02, .02, .02, .02])  # Input as 1 by 6 array
 max_mutation = np.array([2, 2, 2, 2, 2, 2])  # Input as 1 by 6 array
 offrod_mul = 1 # recommended to be set to around 
@@ -50,7 +45,7 @@ sep_mul = 1 # recommended to be set to around
 
 # Other Variables
 or_file_name = 'Tantalus.ork'  # Input as string
-G = 11000000000 # may differ in directions, use minimum value with safety factor 
+G = 10.94*10000000000 # may differ in directions, use minimum value with safety factor 
 t = "fin thickness"
 apogees=np.empty(generation_size)
 children=fs.create_generation(generation_size)
@@ -60,6 +55,7 @@ willflutter=False
 willdiverge=False
 soundspeed=0
 pressure=0
+numberofalgorithms=6
 
 
 # Natural and Convenient Variables
@@ -118,12 +114,13 @@ def simulate_fin_combo(index):
 		
 	willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
 	willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
-	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge]
+	badshape=(chromosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300
+	outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape]
 	
 	
 	apogees[index]=apogee
 	
-	while outputs[1] or outputs[2] or outputs[4] or outputs[5]:
+	while outputs[1] or outputs[2] or outputs[4] or outputs[5] or outputs[6]:
 
 		chromosome=fs.generate_chromosome()
 		firststagefins.setTipChord(float(chromosome[0])/1000)
@@ -159,13 +156,14 @@ def simulate_fin_combo(index):
 			
 		willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
 		willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
-		outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge]
-		
+		badshape=(chromosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300
+		outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape]
+	
 		
 		apogees[index]=apogee
 		children[index,:]=chromosome
 		
-		
+numruns=0		
 
 			
 
@@ -174,9 +172,7 @@ def simulate_fin_combo(index):
 
 # Start of Program
 
-
 threads=[None]*generation_size
-
 
 
 
@@ -205,6 +201,8 @@ with orhelper.OpenRocketInstance() as instance:
 		x.join()
 		
 	
+
+
 	while generationcount<num_generations:
 			
 		print("Current generation number: {}" .format(generationcount+1))
@@ -241,17 +239,21 @@ with orhelper.OpenRocketInstance() as instance:
 		generationcount+=1
 		
 
-costs=fs.calculate_cost(apogees, totalstabilities, target_height, offrod_target, sep_target, offrod_mul, sep_mul)
+	costs=fs.calculate_cost(apogees, totalstabilities, target_height, offrod_target, sep_target, offrod_mul, sep_mul)
 
 
 
-ind=np.where(costs==np.amin(costs))
-index=ind[0]
+	ind=np.where(costs==np.amin(costs))
+	index=ind[0]
 
-print(apogees[index])
-print(children[index,:])
-print(time.time()-start)
-print()
+	print(apogees[index])
+	print(children[index,:])
+	print(time.time()-start)
+	print()
+	with open("final combos.txt", "a") as myfile:
+		myfile.write(str([children[index,:],apogees[index]]))
+		myfile.write('\n')
 
+	
 #fs.visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount)
 
