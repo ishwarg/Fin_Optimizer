@@ -1,5 +1,6 @@
 import os
 import random
+from telnetlib import theNULL
 import numpy as np
 from numpy.core.fromnumeric import shape
 import orhelper
@@ -90,14 +91,21 @@ def crossover(combos, index_to_consider, all_costs):
     while count<length:
         beta=random.random()
         crossover_point=random.randint(0,5)
+        second_crossover=random.randint(0,5)
+        while second_crossover == crossover_point:
+            second_crossover=random.randint(0,5)
+
         child1=parents[count-index_to_consider]
         child2=parents[count+1-index_to_consider]
+    
 
-        child1[crossover_point]=(1-beta)*child1[crossover_point]+beta*child2[crossover_point]
-        child2[crossover_point]=(1-beta)*child2[crossover_point]+beta*child1[crossover_point]
-
+        child1[crossover_point]=int((1-beta)*float(child1[crossover_point])+beta*float(child2[crossover_point]))
+        child2[crossover_point]=int((1-beta)*float(child2[crossover_point])+beta*float(child1[crossover_point]))
+        child1[second_crossover]=int((1-beta)*float(child1[second_crossover])+beta*float(child2[second_crossover]))
+        child2[second_crossover]=int((1-beta)*float(child2[second_crossover])+beta*float(child1[second_crossover]))
         children[count]=child1
         children[count+1]=child2
+        
         
         count+=2
         
@@ -111,13 +119,17 @@ def mutate(children,prob_mutation,max_mutation):
     for each parameter. Mutate outputs a size by 6 array of fin combinations,
     some of which have been mutated in one or more combination parameters. 
     '''
-    temp = np.array(children)
+    temp = children
     for i in temp:
         will_mutate = (prob_mutation > np.random.uniform(0, 1))
         c = 0
         while c < len(i):
             if (will_mutate[c] == True):
                 i[c] = i[c] + max_mutation[c]*np.random.uniform(-1, 1)
+                while i[c]<=0:
+                    i[c] = i[c] + max_mutation[c]*np.random.uniform(-1, 1)
+
+
             c+=1
     return temp.astype(int)
 
@@ -173,7 +185,8 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   found. This genetic algorithm will average the two Models rather than underestimate the value,
   so that it doesn't get stuck forever. The final fin combination can be tested using any model manually.
   '''
-  SAFETY_MARGIN = 0.8
+  SAFETY_MARGIN = 1
+  SCALAR_MULTIPLIER = 1
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -186,7 +199,7 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   tip_chord = tip_chord*m_to_inch
   t = t*m_to_inch
   b = b*m_to_inch
-  a = a*mpers_to_mph
+  a = a*3.28084
   S = 0.5*(root_chord+tip_chord)*b
   G = G*pasc_to_psi
   P = P*pasc_to_psi
@@ -195,10 +208,13 @@ def get_flutter(root_chord, tip_chord, G, t, b, a, P, P0):
   lam = tip_chord/root_chord
   AR = (b**2)/S
   denom = ((39.3*(AR**3)) / (((t/root_chord)**3) * (AR + 2))) * ((lam+1)/2) * (P/P0)
-  model1 = (a * np.sqrt(G / denom))*mph_to_mpers
-  a = a*mph_to_ftpers # a converted to feet per second for Model2 input
-  model2 = a*(np.sqrt(G / ((1.337*(AR**3)*P*(lam+1)) / (2*(AR+2)*(t/root_chord)**3)))) * ftpers_to_mpers
-  return ((model1 + model2) / 2) * SAFETY_MARGIN
+  model1 = (a * np.sqrt(G / denom))*ftpers_to_mpers
+   # a converted to feet per second for Model2 input
+  model2 = a*(np.sqrt(G / ((1.337*(AR**3)*P*(lam+1)) / (2*(AR+2)*(t/root_chord)**3)))) * ftpers_to_mpers*SAFETY_MARGIN*SCALAR_MULTIPLIER
+  model1 = model1*SAFETY_MARGIN*SCALAR_MULTIPLIER
+  
+  return model2
+  #return ((model1 + model2) / 2) * SAFETY_MARGIN*SCALAR_MULTIPLIER
 
 
 def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
@@ -214,8 +230,8 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   slowing down the genetic algorithm. The final combination can be tested for flutter-divergence
   in any way manually.
   '''
-  SAFETY_MARGIN = 0.8
-  scalarMultiplier = 1.3 #for the sake of the gen_alg: set btw 1.0 and 1.5?
+  SAFETY_MARGIN = 1
+  scalarMultiplier = 1 #for the sake of the gen_alg: set btw 1.0 and 1.5?
   # conversion equations
   m_to_inch = 39.370
   mpers_to_mph = 2.237
@@ -234,7 +250,8 @@ def get_divergence(root_chord, tip_chord, G, t, b, a, P, P0):
   # formula  
   AR = (b**2)/S
   calc = (3.3*P)/(1+(2/AR)) * ((root_chord+tip_chord)/(t**3)) * b**2
-  return a * np.sqrt(G / calc)*mph_to_mpers * scalarMultiplier * SAFETY_MARGIN
+  divVelovity = a * np.sqrt(G / calc)*mph_to_mpers* scalarMultiplier * SAFETY_MARGIN
+  return divVelovity
 
 
 def visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount):
@@ -257,7 +274,4 @@ def visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_childr
     plt.legend()
     plt.show()
 
-
-
-
-
+    
