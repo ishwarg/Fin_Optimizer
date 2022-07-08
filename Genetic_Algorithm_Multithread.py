@@ -29,16 +29,16 @@ start=time.time()
 ## The following are inputs:
 
 # Target Variables
-target_height = 9204.96
+target_height = 9296.4
 launchrod=1.55 # minimum stability off rod
 seperation=2.0 # minimum stability at seperation
 offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
 
 # Learning Variables:
-generation_size=10# Input as even integer
-num_generations=10# Input as integer
-prob_mutation = np.array([.4, .4, .4, .4, .5, .5])  # Input as 1 by 6 array
+generation_size=36# Input as even integer
+num_generations=16# Input as integer
+prob_mutation = np.array([.5, .5, .5, .5, .8, .8])  # Input as 1 by 6 array
 max_mutation = np.array([6, 6, 6, 6, 10, 10])  # Input as 1 by 6 array
 offrod_mul = 1 # recommended to be set to around 
 sep_mul = 1 # recommended to be set to around 
@@ -51,6 +51,7 @@ G = 1.483*10**8 # may differ in directions, use minimum value with safety factor
 t = "fin thickness"
 apogees=np.empty(generation_size)
 maxvelocities=np.empty(generation_size)
+altitudesAtMaxVelocities=np.empty(generation_size)
 locale.setlocale(locale.LC_ALL, '')
 totalstabilities=np.empty((generation_size,2))
 willflutter=False
@@ -97,32 +98,41 @@ def simulate_fin_combo(index):
     events = orh.get_events(sim)
             
     ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.LAUNCHROD])
+    flag1= np.size(data[FlightDataType.TYPE_STABILITY][ind])!=1
+        
     
+   
     
-    stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind[0]]
+    stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind]
     ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.STAGE_SEPARATION])
-    stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind[0]]
+    flag2= np.size(data[FlightDataType.TYPE_STABILITY][ind])!=1
+    stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind]
     
     ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
-
-    apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
-    totalstabilities[index,0]=stabilityoffrod
-    totalstabilities[index,1]=stabilityatseperation
+    flag3=np.size(data[FlightDataType.TYPE_ALTITUDE][ind])!=1
+    
+    apogee=data[FlightDataType.TYPE_ALTITUDE][ind]
+    if (not flag1):
+            totalstabilities[index,0]=stabilityoffrod
+    if (not flag2):
+        totalstabilities[index,1]=stabilityatseperation
     ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
     maxvelocities[index]=data[FlightDataType.TYPE_VELOCITY_TOTAL][ind]
+    altitudesAtMaxVelocities[index]=data[FlightDataType.TYPE_ALTITUDE][ind]
     soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
     pressure=data[FlightDataType.TYPE_AIR_PRESSURE][ind]
     #include that checks for flutter here if possible and add a true false into outputlist
         
     willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
     willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
+    
     badshape=(chromosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300 and (chromosome[0]<8 or chromosome[1]<8)
-    outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape]
+    outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape, flag1, flag2, flag3]
     
+    if (not flag3):
+        apogees[index]=apogee
     
-    apogees[index]=apogee
-    
-    while outputs[1] or outputs[2] or outputs[6]: #removed the check for flutter temporarily
+    while outputs[1] or outputs[2] or outputs[6] or outputs[7] or outputs[8] or outputs[9]: #removed the check for flutter temporarily
 
         chromosome=fs.generate_chromosome()
         firststagefins.setTipChord(float(chromosome[0])/1000)
@@ -138,18 +148,23 @@ def simulate_fin_combo(index):
         events = orh.get_events(sim)
 
         ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.LAUNCHROD])
-    
-        stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind[0]]
+
+        flag1 = (np.size(data[FlightDataType.TYPE_STABILITY][ind])!=1)
+        stabilityoffrod=data[FlightDataType.TYPE_STABILITY][ind]
         ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.STAGE_SEPARATION])
-        stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind[0]]
+        flag2=(np.size(data[FlightDataType.TYPE_STABILITY][ind])!=1)
+        stabilityatseperation=data[FlightDataType.TYPE_STABILITY][ind]
         ind=np.where(data[FlightDataType.TYPE_TIME]==events[FlightEvent.APOGEE])
-        apogee=data[FlightDataType.TYPE_ALTITUDE][ind[0]]
+        flag3=np.size(data[FlightDataType.TYPE_ALTITUDE][ind])!=1
+        apogee=data[FlightDataType.TYPE_ALTITUDE][ind]
         
-        
-        totalstabilities[index,0]=stabilityoffrod
-        totalstabilities[index,1]=stabilityatseperation
+        if (not flag1):
+            totalstabilities[index,0]=stabilityoffrod
+        if (not flag2):
+            totalstabilities[index,1]=stabilityatseperation
         ind=np.argmax(data[FlightDataType.TYPE_VELOCITY_TOTAL])
         maxvelocities[index]=data[FlightDataType.TYPE_VELOCITY_TOTAL][ind]
+        altitudesAtMaxVelocities[index]=data[FlightDataType.TYPE_ALTITUDE][ind]
         soundspeed=data[FlightDataType.TYPE_SPEED_OF_SOUND][ind]
         
         pressure=data[FlightDataType.TYPE_AIR_PRESSURE][ind]
@@ -159,10 +174,10 @@ def simulate_fin_combo(index):
         willflutter=fs.get_flutter(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_flutter(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
         willdiverge=fs.get_divergence(0.3,chromosome[0]/1000,G,.003,chromosome[4]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL]) or fs.get_divergence(0.3,chromosome[1]/1000,G,0.003,chromosome[5]/1000,soundspeed, pressure, P0)<max(data[FlightDataType.TYPE_VELOCITY_TOTAL])
         badshape=(chromosome[0]+chromosome[2])>300 and (chromosome[1]+chromosome[3])>300
-        outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape]
+        outputs=[apogee,stabilityoffrod<launchrod,stabilityatseperation<seperation,max(data[FlightDataType.TYPE_VELOCITY_TOTAL]),willflutter,willdiverge, badshape, flag1, flag2, flag3]
     
-        
-        apogees[index]=apogee
+        if (not flag3):
+            apogees[index]=apogee
         children[index,:]=chromosome
 
         
@@ -249,18 +264,22 @@ with orhelper.OpenRocketInstance() as instance:
         ind=np.where(costs==np.amin(costs))
         index=ind[0]
         maxvelocity = maxvelocities[index]
+        altitudeatmax = altitudesAtMaxVelocities[index]
         
 
         print("max apogee: ",apogees[index]*3.281)
         print("combination: ",children[index,:])
-        print("maximum velocity: ", maxvelocity)
+        #print("maximum velocity: ", maxvelocity)
+        #print("altitude at max velocity: ", altitudeatmax)
         print("execution time: ",time.time()-start)
         print()
-        with open("final combos 30200 goal windy.txt", "a") as myfile:
-            inputstring="Combination: " + str(children[index,:]) + "Apogee: "+ str(apogees[index]*3.281)
+        with open("final combos 30500 goal.txt", "a") as myfile:
+            inputstring="Combination: " + str(children[index,:]) + " Apogee: "+ str(apogees[index]*3.281) + " Max Velocity: " + str(maxvelocity) + " Altitude at Max Velocity: " + str(altitudeatmax)
             myfile.write(inputstring)
             myfile.write('\n')
+            myfile.close()
         count+=1
+    print("done")
 
     
 #fs.visualization(vis_costs1, vis_costs2, vis_apogees, vis_children0, vis_children1, vis_children2, vis_children3, vis_children4, vis_children5, vis_generationcount)
