@@ -30,7 +30,7 @@ start=time.time()
 
 # Target Variables
 target_height = 9296.4
-launchrod=1.55 # minimum stability off rod
+launchrod=1.45 # minimum stability off rod
 seperation=2.0 # minimum stability at seperation
 offrod_target = 2 # ideal stability off rod
 sep_target = 2 # ideal stability at seperation
